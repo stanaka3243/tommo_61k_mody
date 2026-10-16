@@ -5,7 +5,7 @@ WORKDIR="${WORKDIR:-$SCRIPTDIR}"          # 作業ディレクトリ (変更可)
 REFDIR="$WORKDIR/ref"
 OUTDIR="$WORKDIR/out"
 GENES="$SCRIPTDIR/genes.tsv"              # 遺伝子名リスト (MANE の選択と集計に使う)
-MODY_BED="/home/tanaka-s/MODY/mody_exons.merged.bed"   # 抽出領域 (GRCh38, BED 0-based)
+MODY_BED="/home/tanaka-s/MODY/mody_exons_merged.bed"   # 抽出領域 (GRCh38, BED 0-based)
 PAD=10                                     # BED の各区間の前後に足す bp (splice donor/acceptor ±2 を含めるため)
 
 # --- 参照データのバージョン (必要に応じて更新) ---
