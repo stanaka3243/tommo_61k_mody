@@ -5,7 +5,7 @@
 set -euo pipefail
 source "$(dirname "$0")/config.sh"
 mkdir -p "$OUTDIR/tmp"; cd "$OUTDIR/tmp"
-rm -f panel.*.vcf.gz* off.vcf.gz*
+rm -f panel.*.vcf.gz* off.vcf.gz* off.*.vcf.gz*
 
 REF="$REFDIR/ref_sub.fa"
 GFF="$REFDIR/ensembl.chr.gff3.gz"
@@ -29,15 +29,21 @@ bcftools index -t -f off.vcf.gz
 ## 3) 結合 -> 多アレル分割/正規化 -> ClinVar -> csq
 annotate () {   # $1 = 出力名, 残り = 入力 VCF
   local name=$1; shift
+  # (a) 結合 -> ソート -> 多アレル分割/正規化  (annotate -a には索引付きファイルが必要なので一旦書き出す)
   bcftools concat -a -D "$@" -Ou \
   | bcftools sort -Ou \
-  | bcftools norm -m -any -f "$REF" -Ou \
-  | bcftools annotate -a "$CV" \
-      -c 'INFO/CV_SIG:=INFO/CLNSIG,INFO/CV_REV:=INFO/CLNREVSTAT,INFO/CV_DN:=INFO/CLNDN,INFO/CV_ALLELEID:=INFO/ALLELEID' -Ou \
-  | bcftools csq -f "$REF" -g "$GFF" -l -Oz -o "$OUTDIR/$name.annot.vcf.gz"
+  | bcftools norm -m -any -f "$REF" -Oz -o "$name.norm.vcf.gz"
+  bcftools index -t -f "$name.norm.vcf.gz"
+  # (b) ClinVar を CV_* として付与
+  bcftools annotate -a "$CV" \
+      -c 'INFO/CV_SIG:=INFO/CLNSIG,INFO/CV_REV:=INFO/CLNREVSTAT,INFO/CV_DN:=INFO/CLNDN,INFO/CV_ALLELEID:=INFO/ALLELEID' \
+      "$name.norm.vcf.gz" -Oz -o "$name.cv.vcf.gz"
+  bcftools index -t -f "$name.cv.vcf.gz"
+  # (c) bcftools csq で機能予測 (INFO/BCSQ)
+  bcftools csq -f "$REF" -g "$GFF" -l "$name.cv.vcf.gz" -Oz -o "$OUTDIR/$name.annot.vcf.gz"
   bcftools index -t -f "$OUTDIR/$name.annot.vcf.gz"
 }
-annotate panel panel.*.vcf.gz
+annotate panel panel.chr*.vcf.gz
 annotate off   off.vcf.gz
 
 ## 4) TSV に書き出し (R で分類する)
