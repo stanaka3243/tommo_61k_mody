@@ -35,7 +35,8 @@ N_PANEL=61424          # 61KJPN の人数 (分母)
 # ===== VEP (06_setup_vep.sh / 07_run_vep.sh) =====
 VEP_REL=113                                        # Ensembl/VEP リリース (GFF3 と揃える)
 VEP_DATA="${VEP_DATA:-$HOME/vep_data}"             # キャッシュ・プラグイン・データの置き場 (数十 GB)
-VEP_SIF="$VEP_DATA/ensembl-vep_${VEP_REL}.sif"     # Singularity/Apptainer イメージ
+VEP_SIF="$VEP_DATA/ensembl-vep_${VEP_REL}.sif"     # Apptainer イメージ (SIF)
+VEP_SANDBOX="$VEP_DATA/ensembl-vep_${VEP_REL}_sandbox"   # SIF が作れない場合の sandbox
 VEP_CACHE="$VEP_DATA/cache"
 VEP_PLUGINS="$VEP_DATA/plugins"
 VEP_FASTA="$VEP_DATA/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz"   # HGVS 用 (bgzip)

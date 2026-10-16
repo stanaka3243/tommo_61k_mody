@@ -9,6 +9,10 @@ source "$(dirname "$0")/config.sh"
 set +u; module load apptainer 2>/dev/null || true; set -u
 SING=$(command -v singularity || command -v apptainer) || { echo "singularity/apptainer が見つかりません"; exit 1; }
 mkdir -p "$OUTDIR/vep"; cd "$OUTDIR/vep"
+# 06 で作ったイメージ (SIF があればそれ, 無ければ sandbox)
+if [ -s "$VEP_SIF" ]; then IMAGE="$VEP_SIF"
+elif [ -d "$VEP_SANDBOX" ]; then IMAGE="$VEP_SANDBOX"
+else echo "VEP イメージがありません。先に 06_setup_vep.sh を実行してください"; exit 1; fi
 
 ## プラグイン引数 (データがあるものだけ)
 PLUG=(); FIELDS_EXTRA=()
@@ -57,9 +61,9 @@ for name in panel off; do
           --per_gene --pick_order mane_select,canonical,appris,tsl,biotype,ccds,rank,length
           "${PLUG[@]}")
 
-  "$SING" exec -B "$BIND" "$VEP_SIF" vep -i "$OUTDIR/vep/$name.in.vcf.gz" \
+  "$SING" exec -B "$BIND" "$IMAGE" vep -i "$OUTDIR/vep/$name.in.vcf.gz" \
       "${common[@]}" --vcf --compress_output bgzip -o "$OUTDIR/vep/$name.vep.vcf.gz"
-  "$SING" exec -B "$BIND" "$VEP_SIF" vep -i "$OUTDIR/vep/$name.in.vcf.gz" \
+  "$SING" exec -B "$BIND" "$IMAGE" vep -i "$OUTDIR/vep/$name.in.vcf.gz" \
       "${common[@]}" --tab --fields "$FIELDS" -o "$OUTDIR/vep/$name.vep.tsv"
   bcftools index -t -f "$name.vep.vcf.gz"
 done

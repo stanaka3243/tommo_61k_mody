@@ -8,7 +8,19 @@ SING=$(command -v singularity || command -v apptainer) || { echo "singularity/ap
 mkdir -p "$VEP_DATA" "$VEP_CACHE" "$VEP_PLUGINS"; cd "$VEP_DATA"
 
 ## 1) VEP コンテナ
-[ -s "$VEP_SIF" ] || "$SING" pull "$VEP_SIF" "docker://ensemblorg/ensembl-vep:release_${VEP_REL}.0"
+#   ログインノードではスレッド数制限で mksquashfs が失敗することがあるため:
+#   (a) mksquashfs を 1 スレッドで SIF 作成 -> (b) 失敗したら sandbox (ディレクトリ形式, 圧縮なし) で作成
+export APPTAINER_CACHEDIR="$VEP_DATA/.apptainer_cache"  APPTAINER_TMPDIR="$VEP_DATA/.apptainer_tmp"
+export SINGULARITY_CACHEDIR="$APPTAINER_CACHEDIR"     SINGULARITY_TMPDIR="$APPTAINER_TMPDIR"
+mkdir -p "$APPTAINER_CACHEDIR" "$APPTAINER_TMPDIR"
+IMG="docker://ensemblorg/ensembl-vep:release_${VEP_REL}.0"
+if [ ! -s "$VEP_SIF" ] && [ ! -d "$VEP_SANDBOX" ]; then
+  if ! "$SING" build --mksquashfs-args "-processors 1" "$VEP_SIF" "$IMG"; then
+    echo "[06] SIF の作成に失敗 -> sandbox 形式で作成します"
+    rm -f "$VEP_SIF"
+    "$SING" build --sandbox "$VEP_SANDBOX" "$IMG"
+  fi
+fi
 
 ## 2) オフラインキャッシュ (GRCh38, gnomAD v4 頻度・ClinVar 等を含む)
 CT="homo_sapiens_vep_${VEP_REL}_GRCh38.tar.gz"
