@@ -6,7 +6,7 @@
 # 出力: out/vep/{panel,off}.vep.vcf.gz と {panel,off}.vep.tsv (ID = CHROM_POS_REF_ALT で 03 の結果と結合可)
 set -euo pipefail
 source "$(dirname "$0")/config.sh"
-set +u; module load singularity 2>/dev/null || module load apptainer 2>/dev/null || true; set -u
+set +u; module load apptainer 2>/dev/null || true; set -u
 SING=$(command -v singularity || command -v apptainer) || { echo "singularity/apptainer が見つかりません"; exit 1; }
 mkdir -p "$OUTDIR/vep"; cd "$OUTDIR/vep"
 
