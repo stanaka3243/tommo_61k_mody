@@ -11,7 +11,7 @@ Sharp et al. (JCEM 2026) の UK Biobank 解析に近い方法で、jMorp の公�
 
 ## 実行 (インターネットに出られるノードで)
     bash run_all.sh
-個別に動かす場合は 01 → 02 → 03 → 04 → 05 の順。設定は config.sh。抽出領域は MODY_BED (/home/tanaka-s/MODY/mody_exons.merged.bed) を PAD (既定 10 bp) だけ広げて使う。
+個別に動かす場合は 01 → 02 → 03 → 04 → 05 の順。設定は config.sh。抽出領域は MODY_BED (/home/tanaka-s/MODY/mody_exons_merged.bed) を PAD (既定 10 bp) だけ広げて使う。
 genes.tsv は遺伝子名リスト (MANE Select の選択と集計に使用; BED の遺伝子と一致させること)。
 
 | スクリプト | 内容 | 主な出力 |
@@ -21,6 +21,15 @@ genes.tsv は遺伝子名リスト (MANE Select の選択と集計に使用; BED
 | 03_classify.R | MANE Select で分類し保因者数・頻度 (1 in X, 95%CI) を集計 | out/candidates.tsv, review_missense.tsv, summary_61KJPN.tsv |
 | 04_cnv_17q12.sh | JCNVv1 から 17q12 周辺の bin を抽出 | out/cnv_17q12.tsv |
 | 05_cnv_17q12.R | HNF1B 上の CN1 (欠失) 人数と図 | out/cnv_17q12_bins.tsv, cnv_17q12.png |
+
+## VEP アノテーション (任意, 06 → 07)
+| スクリプト | 内容 | 主な出力 |
+|---|---|---|
+| 06_setup_vep.sh | 初回のみ: VEP コンテナ, キャッシュ(GRCh38), FASTA, プラグイン, AlphaMissense | $VEP_DATA |
+| 07_run_vep.sh | panel/off の VCF を VEP で注釈 (MANE 優先, HGVS, gnomAD v4 EAS, SIFT/PolyPhen, AlphaMissense; REVEL/SpliceAI/CADD/LOFTEE はデータがあれば) | out/vep/*.vep.tsv |
+| 08_merge_vep.R | candidates.tsv と VEP 結果を結合 (Rscript 08_merge_vep.R out) | out/candidates_vep.tsv, review_missense_vep.tsv, plp_core4_vep.tsv |
+- 結合キーは CHROM_POS_REF_ALT と遺伝子名。AF/MAF 列 (AC/AN), gnomAD_absent (PM2 の目安) も追加される。
+- REVEL, SpliceAI, CADD, LOFTEE のデータは規約・ログインの都合で手動準備 (06 の最後に案内が出る)。
 
 ## 分類の定義 (03_classify.R)
 - ClinVar_PLP : ClinVar で Pathogenic / Likely pathogenic (Conflicting は除外)

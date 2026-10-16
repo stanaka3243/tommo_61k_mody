@@ -31,3 +31,23 @@ CNV_URL="$JMORP/tommo-jcnvv1-20230828/files/tommo-jcnvv1-20230828-GRCh38.vcf.gz"
 # --- 解析パラメータ ---
 MAX_AC_MISSENSE=2      # ultra-rare missense の上限 (Sharp et al. の gnomAD AC<=2 に準拠)
 N_PANEL=61424          # 61KJPN の人数 (分母)
+
+# ===== VEP (06_setup_vep.sh / 07_run_vep.sh) =====
+VEP_REL=113                                        # Ensembl/VEP リリース (GFF3 と揃える)
+VEP_DATA="${VEP_DATA:-$HOME/vep_data}"             # キャッシュ・プラグイン・データの置き場 (数十 GB)
+VEP_SIF="$VEP_DATA/ensembl-vep_${VEP_REL}.sif"     # Singularity/Apptainer イメージ
+VEP_CACHE="$VEP_DATA/cache"
+VEP_PLUGINS="$VEP_DATA/plugins"
+VEP_FASTA="$VEP_DATA/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz"   # HGVS 用 (bgzip)
+VEP_FORK=4
+# --- プラグイン用データ (ファイルがあれば自動で使う / 無ければスキップ) ---
+AM_FILE="$VEP_DATA/AlphaMissense_hg38.tsv.gz"                      # 06 で自動ダウンロード
+REVEL_FILE="$VEP_DATA/revel/new_tabbed_revel_grch38.tsv.gz"        # 手動 (学術利用規約あり)
+SPLICEAI_SNV="$VEP_DATA/spliceai/spliceai_scores.raw.snv.hg38.vcf.gz"     # 手動 (Illumina BaseSpace)
+SPLICEAI_INDEL="$VEP_DATA/spliceai/spliceai_scores.raw.indel.hg38.vcf.gz"
+CADD_SNV="$VEP_DATA/cadd/whole_genome_SNVs.tsv.gz"                 # 任意 (約 80 GB)
+CADD_INDEL="$VEP_DATA/cadd/gnomad.genomes.r4.0.indel.tsv.gz"
+LOFTEE_DIR="$VEP_DATA/loftee"                                      # 任意 (GRCh38 ブランチ)
+LOFTEE_ANC="$VEP_DATA/loftee_data/human_ancestor.fa.gz"
+LOFTEE_GERP="$VEP_DATA/loftee_data/gerp_conservation_scores.homo_sapiens.GRCh38.bw"
+LOFTEE_SQL="$VEP_DATA/loftee_data/loftee.sql"
