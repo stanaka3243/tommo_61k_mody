@@ -27,8 +27,9 @@ read_vep <- function(f) {
   setnames(d, 1, "id")
   d
 }
-vep <- rbindlist(list(read_vep(file.path(outdir, "vep", "panel.vep.tsv")),
-                      read_vep(file.path(outdir, "vep", "off.vep.tsv"))), fill = TRUE)
+vf  <- file.path(outdir, "vep", c("panel.vep.tsv", "off.vep.tsv", "candidates.vep.tsv"))  # 07 (ローカル) または 07b (REST)
+vep <- rbindlist(lapply(vf[file.exists(vf)], read_vep), fill = TRUE)
+if (nrow(vep) == 0) stop("VEP の結果がありません (07_run_vep.sh か 07b_vep_rest.sh を先に実行)")
 vep <- unique(vep)
 
 ## --per_gene でも 1 変異が複数遺伝子に重なることがあるので, 候補の遺伝子と SYMBOL を合わせる

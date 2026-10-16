@@ -27,6 +27,7 @@ genes.tsv は遺伝子名リスト (MANE Select の選択と集計に使用; BED
 |---|---|---|
 | 06_setup_vep.sh | 初回のみ: VEP コンテナ, キャッシュ(GRCh38), FASTA, プラグイン, AlphaMissense | $VEP_DATA |
 | 07_run_vep.sh | panel/off の VCF を VEP で注釈 (MANE 優先, HGVS, gnomAD v4 EAS, SIFT/PolyPhen, AlphaMissense; REVEL/SpliceAI/CADD/LOFTEE はデータがあれば) | out/vep/*.vep.tsv |
+| 07b_vep_rest.sh | (キャッシュ不要) Ensembl VEP REST API で candidates.tsv を注釈。REVEL/SpliceAI/CADD/AlphaMissense/LOFTEE も取得 | out/vep/candidates.vep.tsv |
 | 08_merge_vep.R | candidates.tsv と VEP 結果を結合 (Rscript 08_merge_vep.R out) | out/candidates_vep.tsv, review_missense_vep.tsv, plp_core4_vep.tsv |
 - 結合キーは CHROM_POS_REF_ALT と遺伝子名。AF/MAF 列 (AC/AN), gnomAD_absent (PM2 の目安) も追加される。
 - REVEL, SpliceAI, CADD, LOFTEE のデータは規約・ログインの都合で手動準備 (06 の最後に案内が出る)。

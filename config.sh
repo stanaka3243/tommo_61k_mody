@@ -52,3 +52,8 @@ LOFTEE_DIR="$VEP_DATA/loftee"                                      # 任意 (GRC
 LOFTEE_ANC="$VEP_DATA/loftee_data/human_ancestor.fa.gz"
 LOFTEE_GERP="$VEP_DATA/loftee_data/gerp_conservation_scores.homo_sapiens.GRCh38.bw"
 LOFTEE_SQL="$VEP_DATA/loftee_data/loftee.sql"
+
+# ===== VEP REST API (07b_vep_rest.sh) =====
+VEP_REST_SERVER="https://rest.ensembl.org"
+# 使うオプション (未対応のものがあると 400 エラー -> ここから外す)
+VEP_REST_PARAMS="hgvs=1&mane=1&canonical=1&numbers=1&variant_class=1&af_gnomade=1&af_gnomadg=1&AlphaMissense=1&REVEL=1&SpliceAI=1&CADD=1&LoF=1"
