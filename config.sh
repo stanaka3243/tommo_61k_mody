@@ -1,4 +1,14 @@
 #!/usr/bin/env bash
+# ===== SHIROKANE: environment modules (最初に読み込む) =====
+if ! command -v module >/dev/null 2>&1; then          # 非対話シェルでは module 関数が未定義のことがある
+  for f in /etc/profile.d/modules.sh /usr/share/Modules/init/bash /etc/profile.d/lmod.sh; do
+    [ -f "$f" ] && source "$f" && break
+  done
+fi
+set +u                                                 # module スクリプトは未定義変数を参照することがある
+module use /usr/local/package/modulefiles
+module load samtools
+set -u
 # ===== 共通設定 (各スクリプトから source される) =====
 SCRIPTDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKDIR="${WORKDIR:-$SCRIPTDIR}"          # 作業ディレクトリ (変更可)
