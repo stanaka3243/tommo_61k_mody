@@ -1,28 +1,41 @@
 #!/usr/bin/env bash
+# ===== 実行場所 =====
+#   slade     : Exeter Slade。61KJPN はローカルの VCF を読む (AF_LOCAL)
+#   shirokane : SHIROKANE。61KJPN は jMorp から HTTPS で領域だけ読む (AF_URL)
+DATA_SITE="${DATA_SITE:-slade}"
+
 # ===== SHIROKANE: environment modules (最初に読み込む) =====
-if ! command -v module >/dev/null 2>&1; then          # 非対話シェルでは module 関数が未定義のことがある
-  for f in /etc/profile.d/modules.sh /usr/share/Modules/init/bash /etc/profile.d/lmod.sh; do
-    [ -f "$f" ] && source "$f" && break
-  done
+if [ "$DATA_SITE" = shirokane ]; then
+  if ! command -v module >/dev/null 2>&1; then          # 非対話シェルでは module 関数が未定義のことがある
+    for f in /etc/profile.d/modules.sh /usr/share/Modules/init/bash /etc/profile.d/lmod.sh; do
+      [ -f "$f" ] && source "$f" && break
+    done
+  fi
+  set +u                                               # module スクリプトは未定義変数を参照することがある
+  module use /usr/local/package/modulefiles
+  module load samtools
+  set -u
 fi
-set +u                                                 # module スクリプトは未定義変数を参照することがある
-module use /usr/local/package/modulefiles
-module load samtools
-set -u
 # ===== 共通設定 (各スクリプトから source される) =====
 SCRIPTDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKDIR="${WORKDIR:-$SCRIPTDIR}"          # 作業ディレクトリ (変更可)
 REFDIR="$WORKDIR/ref"
 OUTDIR="$WORKDIR/out"
-GENES="$SCRIPTDIR/genes.tsv"              # 遺伝子名リスト (MANE の選択と集計に使う)
-MODY_BED="/home/tanaka-s/MODY/mody_exons_merged.bed"   # 抽出領域 (GRCh38, BED 0-based)
-PAD=10                                     # BED の各区間の前後に足す bp (splice donor/acceptor ±2 を含めるため)
+GENES="${GENES:-$SCRIPTDIR/genes_core4.tsv}"   # 対象遺伝子 (MODY1/2/3/5)。10 遺伝子なら genes.tsv
+
+# --- 抽出領域 (01 で MANE Select 転写産物から作る) ---
+UPSTREAM=5000          # 転写産物の 5' 側に足す bp (HNF4A P1 プロモーターなどを含める)
+DOWNSTREAM=1000        # 転写産物の 3' 側に足す bp
+PAD=10                 # CDS の前後 PAD bp を REGION=CDS_pm{PAD} とする (splice donor/acceptor ±2 を含む)
 
 # --- 参照データのバージョン (必要に応じて更新) ---
 ENSEMBL_REL=113                            # Ensembl GFF3 (bcftools csq 用)
 MANE_VER=1.4                               # NCBI MANE summary
 
-# --- jMorp のファイル (2026-10 時点の URL) ---
+# --- jMorp のファイル ---
+AF_LOCAL_DEFAULT='/slade/home/st1041/tommo/61kjpn/tommo-61kjpn-20250616-GRCh38-snvindel-af-autosome-{CHR}.vcf.gz'
+AF_LOCAL="${AF_LOCAL:-$AF_LOCAL_DEFAULT}"   # Slade 上の 61KJPN ({CHR} は chr7 などに置換される)
+OFF_LOCAL="${OFF_LOCAL:-}"                 # Slade 上の off-panel singleton (空なら OFF_URL を HTTPS で読む)
 JMORP="https://jmorp.megabank.tohoku.ac.jp/datasets"
 AF_URL="$JMORP/tommo-61kjpn-20250616-af_snvindelall/files/tommo-61kjpn-20250616-GRCh38-snvindel-af-autosome-{CHR}.vcf.gz"
 OFF_URL="$JMORP/tommo-61kjpn-20260831-off_panel_singleton/files/tommo-61kjpn-20260831-GRCh38-snvindel-af-autosome-chr1_22-off_panel_singleton.vcf.gz"
@@ -31,6 +44,9 @@ CNV_URL="$JMORP/tommo-jcnvv1-20230828/files/tommo-jcnvv1-20230828-GRCh38.vcf.gz"
 # --- 解析パラメータ ---
 MAX_AC_MISSENSE=2      # ultra-rare missense の上限 (Sharp et al. の gnomAD AC<=2 に準拠)
 N_PANEL=61424          # 61KJPN の人数 (分母)
+# 03 の候補 (従来の集計) に使う条件。all_variants.tsv はこの条件に関係なく全件出る
+CAND_PASS_ONLY=1               # 1 = FILTER=PASS のみ, 0 = FILTER を問わない
+CAND_REGIONS="CDS_pm${PAD}"    # カンマ区切り: CDS_pm10, UTR_exon, intron, upstream, downstream
 
 # ===== VEP (06_setup_vep.sh / 07_run_vep.sh) =====
 VEP_REL=113                                        # Ensembl/VEP リリース (GFF3 と揃える)

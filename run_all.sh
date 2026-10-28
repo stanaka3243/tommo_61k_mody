@@ -4,6 +4,7 @@ set -euo pipefail
 source "$(dirname "$0")/config.sh"
 bash "$SCRIPTDIR/01_prepare_refs.sh"
 bash "$SCRIPTDIR/02_extract_annotate.sh"
-Rscript "$SCRIPTDIR/03_classify.R" "$OUTDIR" "$REFDIR" "$GENES" "$MAX_AC_MISSENSE" "$N_PANEL"
+Rscript "$SCRIPTDIR/03_classify.R" "$OUTDIR" "$REFDIR" "$GENES" "$MAX_AC_MISSENSE" "$N_PANEL" \
+  "$PAD" "$CAND_PASS_ONLY" "$CAND_REGIONS"
 bash "$SCRIPTDIR/04_cnv_17q12.sh"
 Rscript "$SCRIPTDIR/05_cnv_17q12.R" "$OUTDIR"
